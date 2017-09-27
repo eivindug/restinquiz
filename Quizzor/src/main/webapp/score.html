@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Scoreboard</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            .body{
+                background-image:url(gravplass.gif);
+                background-repeat:no-repeat;
+                background-size:cover;
+            }
+            .div1{
+                background-color: lightslategray;
+            }
+            .white{
+                color:white;
+            }
+        </style>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    </head>
+    <body class="body">
+        <button id="back" class="btn btn-danger">Back to quizlist</button><button id="music" class="btn btn-danger">Turn of music</button>       
+        <h1 id="quizname" class="white"></h1>  
+        <div class="div1">
+            <table id="myScore" class="display compact">
+                <thead>
+                    <tr><th>Players</th><th>Score</th></tr>
+                </thead> 
+            </table>
+        </div>
+        <link rel="stylesheet" type="text/css" href="http://cdn.datatables.net/1.10.9/css/jquery.dataTables.min.css">
+        <script src="jquery-3.2.1.min.js"></script>
+        <script src="http://cdn.datatables.net/1.10.9/js/jquery.dataTables.min.js"></script>
+        <script>
+            $(document).ready(function(){
+                var x = location.search;
+                var quizname=x.split('param1=')[1];
+                $("#quizname").html(quizname);
+            
+
+                var table= $('#myScore').DataTable( {
+                    ajax: {
+                        url: 'rest/quiz/' + quizname,
+                        dataSrc: ''
+                    },                  
+                    columns: [
+                        { data: 'username' },
+                        { data: 'score' }
+                ]});
+                
+                $("#back").click(function () {
+                    window.location="quizlist.html";
+                });
+                
+                window.setInterval(function(){
+                    $('#myScore').DataTable().ajax.reload();
+                },30000);
+                                                       
+                $("#music").click(function () {
+                    $("#musikk").trigger("pause");
+                });
+            });
+        </script>
+    </body>
+</html>

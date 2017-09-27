@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <style>
+            .body{
+                background-image:url(gravpl.gif);
+                background-repeat:no-repeat;
+                background-size: 1370px 690px;
+            }
+            .welcome{
+                font-size: 20px;
+                position: absolute;
+                left: 500px;
+                text-align:center;
+                font-family: Jazz LET, fantasy;
+            }
+            .div{
+                background-image:url(gravpp.png);
+                background-repeat:no-repeat;
+                background-size:cover;
+                width: 160px;
+                height: 202px;
+                position: absolute;
+                left: 570px;
+                top: 240px;
+                font-size: 15px;
+                text-align:center;
+                font-family: Jazz LET, fantasy;
+            }
+            .make{
+                background-image:url(gravpp.png);
+                background-repeat:no-repeat;
+                background-size:cover;
+                width: 160px;
+                height: 202px;
+                position: absolute;
+                left: 350px;
+                top: 400px;
+                font-size: 20px;
+                text-align:center;
+                font-family: Jazz LET, fantasy;
+            }
+            .join{
+                background-image:url(gravpp.png);
+                background-repeat:no-repeat;
+                background-size:cover;
+                width: 160px;
+                height: 202px;
+                position: absolute;
+                left: 800px;
+                top: 400px;
+                font-size: 20px;
+                text-align:center;
+                font-family: Jazz LET, fantasy;
+            }
+        </style>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+        <title>Rest in Quiz</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body class="body">
+        <div class="welcome"><h1><br><br><br><br>WELCOME TO</h1></div>   
+        <div class="div"><h1>REST<br> IN<br> QUIZ</h1><br><br><br><br><br><br><br><br><br>
+            <button id="music" class="btn btn-primary btn-xs">Turn of music</button>
+        </div>
+        <div id="nyquiz" class="make"><h1>Make <br>quiz</h1></div><br><br>
+        <div id="join" class="join"><h1>Join <br>quiz</h1></div><br>
+        <audio id="musikk" autoplay="autoplay" loop="loop" ><source src="meny.mp3" /></audio>
+        
+    <script src="jquery-3.2.1.min.js" ></script>    
+    <script>
+        $("#nyquiz").click(function () {
+            window.location="addquiz.html";
+        });
+        
+        $("#join").click(function () {
+            window.location="quizlist.html";
+        });
+        
+        $("#music").click(function () {
+            $("#musikk").trigger("pause");
+        });
+        
+    </script>  
+    </body>
+</html>

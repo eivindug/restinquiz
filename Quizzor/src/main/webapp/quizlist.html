@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <style>
+            .body{
+                background-image:url(gravplass.gif);
+                background-repeat:no-repeat;
+                background-size:cover;
+            }
+            .div1{
+                background-color: lightslategray;
+            }
+        </style>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="http://cdn.datatables.net/1.10.9/css/jquery.dataTables.min.css">
+        <script src="jquery-3.2.1.min.js"></script>
+        <script src="http://cdn.datatables.net/1.10.9/js/jquery.dataTables.min.js"></script>
+        <title>quizlist</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body class="body">
+        <button id="back" class="btn btn-danger">Back to meny</button><button id="music" class="btn btn-danger">Turn of music</button><br><br>
+        <div class="div1">
+            <h1>Coming up</h1>
+            <table id="myTable" class="display compact">
+                <thead>
+                    <tr><th>Starttime</th><th>Quizname</th><th>Maker</th><th>Players</th><th>Join</th></tr>
+                </thead> 
+            </table>
+            <audio id="musikk" autoplay="autoplay" loop="loop" ><source src="Creepy.mp3" /></audio>
+        </div>
+        <script>
+            $(document).ready(function(){
+                var table= $('#myTable').DataTable( {
+                    ajax: {
+                        url: 'rest/quiz',
+                        dataSrc: ''
+                    },                  
+                    columns: [
+                        { data: 'starttime' },
+                        { data: 'name' },
+                        { data: 'maker' },
+                        { data: 'players' },
+                        { "data": null,
+                        "defaultContent": '<button type="button" class="join">Join Game</button>' + 
+                                '<button type="button" class="watch">Watch score</button>'}
+                ]});
+                    
+                
+                
+                $('#myTable tbody').on( 'click', 'button.join', function () {
+                    var data = table.row( $(this).parents('tr') ).data();
+                    var username = prompt("Please enter your username", "Quiztoffer");
+                    var quizname = data.name;
+                    $.ajax({
+                        url: 'rest/quiz/' + quizname + "/" + username,
+                        type: 'POST',
+                    success: function(result) {
+                        $('#myTable').DataTable().ajax.reload();
+                        window.location="play.html?param1="+quizname+"&param2="+username;
+                    }
+                    });   
+                } );
+        
+                $('#myTable tbody').on( 'click', 'button.watch', function () {
+                    var data = table.row( $(this).parents('tr') ).data();
+                    var quizname = data.name;
+                    window.location="score.html?param1="+quizname;
+                });
+        
+        
+                /*
+                 * updates datatable and
+                 * deletes a quiz that is supposed to start, but 
+                 * has no players
+                 */
+                window.setInterval(function(){
+                    var date = new Date();
+                    var min = String(date.getMinutes());
+                    if(min<10) min="0" + min;
+                    var hour = String(date.getHours());
+                    var check= hour+min;
+        
+                    table.rows().every( function ( rowIdx, tableLoop, rowLoop ) {
+                        var data = this.data();
+                        var name= data.name;
+                        var players= data.players;
+                        if(players==0 && data.starttime==check || (data.starttime+1)==check ){
+
+                            this.remove().draw();
+            
+                            $.ajax({
+                                url: 'rest/quiz/' + name,
+                                type: 'DELETE',
+                            success: function(result) {
+                                $('#myTable').DataTable().ajax.reload();
+                            }
+                            });
+                        }
+               
+                    });
+                    $('#myTable').DataTable().ajax.reload();
+                },30000);
+            
+                $("#back").click(function () {
+                    window.location="index.html";
+                });
+                    
+                $("#music").click(function () {
+                    $("#musikk").trigger("pause");
+                });
+            });
+            
+            
+        </script> 
+    </body>
+</html>

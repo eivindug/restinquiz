@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title id="tittel"></title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            .button {
+                background-image: url("gravpp.png");
+                background-repeat:no-repeat;
+                background-size:cover;
+                display: none;
+                width: 150px;
+                height: 150px;
+                font-size: 20px;
+                word-wrap: break-word;
+            }
+            .body{
+                background-image:url(gravplass.gif);
+                background-repeat:no-repeat;
+                background-size:cover;
+            }
+            .div1{
+                text-align:center;
+            }
+            .div2{
+                background-color: lightslategray;
+            }
+            .timer{
+                left:100px;
+                color:white;
+            }
+            .white{
+                color:white;
+            }
+        </style>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    </head>
+    <body class="body">
+        <audio id="musikk" autoplay="autoplay" loop="loop" ><source src="meny.mp3" /></audio>
+        <h1 id="quizname" class="white"></h1><p id="user" class="white"></p><br>
+        <button id="back" class="btn btn-danger">Back to quizlist</button><button id="music" class="btn btn-danger">Turn of music</button>
+        <div id="div1" class="div1">
+            <h1 id="question" class="white">Waiting for quiz to start</h1>
+            <button id="a1" class="button"></button><button id="a2" class="button"></button><br><br>
+            <h1 id="timer" class="timer"></h1>
+            <button id="a3" class="button"></button><button id="a4" class="button"></button>
+        </div>
+        <div id="div2" class="div2">
+            <table id="myScore" class="display compact">
+                <thead>
+                    <tr><th>Players</th><th>Score</th></tr>
+                </thead> 
+            </table>
+        </div>
+        
+        <link rel="stylesheet" type="text/css" href="http://cdn.datatables.net/1.10.9/css/jquery.dataTables.min.css">
+        <script src="jquery-3.2.1.min.js"></script>
+        <script src="http://cdn.datatables.net/1.10.9/js/jquery.dataTables.min.js"></script>
+        <script>
+            $(document).ready(function(){
+                $(".div2").hide();
+                var qnumber=0;
+                var x = location.search;
+                var quizname=(x.split('param1=')[1]||'').split('&')[0];
+                var username=x.split('param2=')[1];
+                $("#quizname").html(quizname);
+                $("#tittel").html(quizname);
+                $("#user").html("username: " + username);
+                
+                var starttime;
+                $.get("rest/quiz/username/" + quizname, function(data){
+                    starttime=String(data);
+                    $("#timer").html("Starting: " + starttime);
+                });
+            
+                var start=0;
+                var timer;
+                var correct;
+                var qsum;
+                var clicked;
+            
+                window.setInterval(function(){
+                    if(start!=4){
+                        if(qnumber==qsum){
+                            /*
+                             * if quiz is done. delete quiz and show
+                             * scoreboard
+                             */
+                            $(".div2").toggle();
+                            $(".div1").hide();
+                            start=4;
+                            
+                            $.ajax({
+                                url: 'rest/quiz/' + quizname,
+                                type: 'DELETE',
+                            success: function(result) {
+                                $('#myTable').DataTable().ajax.reload();
+                            }
+                            });
+                        }
+                        
+                    if(start==0){
+                        /*
+                         * waiting for quiz to start
+                         */
+                        var date = new Date();
+                        var min = String(date.getMinutes());
+                        if(min<10) min="0" + min;
+                        var hour = String(date.getHours());
+                        var check= hour+min;
+                        if(check==starttime) start=1;
+                    }
+                    if(start==1){
+                        /*
+                         * gets question data
+                         */
+                        $.get("rest/quiz/" + quizname + "/" + qnumber, function(data){
+                       
+                            $("#question").html(data[0]);
+                            timer=parseInt(data[1]);
+                            $("#timer").html(timer);
+                            $(".button").display="inline-block";
+                            $(".button").prop('disabled', false);
+                            $("#a1").html(data[2]).fadeIn(200);
+                            $("#a2").html(data[3]).fadeIn(200);
+                            $("#a3").html(data[4]).fadeIn(200);
+                            $("#a4").html(data[5]).fadeIn(200);
+                            correct=parseInt(data[6]);
+                            qsum=parseInt(data[7]);
+                                       
+                        });
+                        start=2;       
+                    }
+                
+                    if(start==2){
+                        /*
+                         * time is up and all the uncorrect answers will fade out
+                         */
+                        timer-=1;
+                        $("#timer").html(timer);
+                        if(timer==0){
+                            start=3;
+                            qnumber+=1;
+                            timer=15;
+                            if(correct!=1)$("#a1").stop().fadeOut(1000);
+                            if(correct!=2)$("#a2").stop().fadeOut(1000);
+                            if(correct!=3)$("#a3").stop().fadeOut(1000);
+                            if(correct!=4)$("#a4").stop().fadeOut(1000);
+                        }    
+                    }
+                    if(start==3){
+                        if(clicked==correct){
+                            /*
+                             * after the correct answer is revealed, the 
+                             * scoreboard will show up, and a point will be given
+                             * or not
+                             */
+                            $.ajax({
+                                url: 'rest/quiz/point/' + quizname + "/" + username,
+                                type: 'POST',
+                            success: function(result) {
+                                $('#myScore').DataTable().ajax.reload();
+                            }
+                            });
+                            $("#a"+clicked).prop('disabled', true);
+                            clicked=0;
+                        }
+                        if(timer==10){
+                            $(".div1").hide();
+                            $(".div2").toggle();
+                        }   
+                        timer-=1
+                        if(timer==0){
+                            $(".div1").toggle(); 
+                            $(".div2").hide();
+                            start=1;
+                        
+                        }
+                    }
+                }
+            }, 1000);     
+            
+            var table= $('#myScore').DataTable( {
+                ajax: {
+                    url: 'rest/quiz/' + quizname,
+                    dataSrc: ''
+                },                  
+                columns: [
+                    { data: 'username' },
+                    { data: 'score' }
+            ]});
+            
+            $("#a1").click(function () {
+                $("#a2").prop('disabled', true);
+                $("#a3").prop('disabled', true);
+                $("#a4").prop('disabled', true);
+                clicked=1;
+            });
+            $("#a2").click(function () {
+                $("#a1").prop('disabled', true);
+                $("#a3").prop('disabled', true);
+                $("#a4").prop('disabled', true);
+                clicked=2;
+            });       
+            $("#a3").click(function () {
+                $("#a1").prop('disabled', true);
+                $("#a2").prop('disabled', true);
+                $("#a4").prop('disabled', true);
+                clicked=3;
+            });       
+            $("#a4").click(function () {
+                $("#a1").prop('disabled', true);
+                $("#a2").prop('disabled', true);
+                $("#a3").prop('disabled', true);
+                clicked=4;
+            });       
+            
+            /*
+             * deletes user from quiz when he leaves
+             */
+            $(window).bind('beforeunload', function(){
+                $.ajax({
+                    url: 'rest/quiz/' + quizname + "/" + username,
+                    type: 'DELETE',
+                success: function(result) {
+                $('#myTable').DataTable().ajax.reload();
+                }
+                });
+            });
+                            
+            $("#back").click(function () {
+                window.location="quizlist.html";
+            });
+            
+            $("#music").click(function () {
+                $("#musikk").trigger("pause");
+            });
+        });
+        </script>
+    </body>
+</html>

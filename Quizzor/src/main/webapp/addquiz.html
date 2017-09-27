@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <style>
+            .body{
+                background-image:url(gravplass.gif);
+                background-repeat:no-repeat;
+                background-size:cover;
+            }
+            .div{
+                background-image:url(gravpp.png);
+                background-repeat:no-repeat;
+                background-size:cover;
+                width: 600px; 
+                height: 650px;
+                text-align:center;
+            }
+            .input{
+                background-color:indianred;
+            }
+        </style>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+        <title>Add quiz</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body class="body">
+        <div class="div">
+            <br>
+            <h1>Make your own quiz</h1>
+            Username<input id="username" class="input" type="text" value="username" size="10" ><br><br>
+            Quizname<input id="quizname" class="input" type="text" value="quizname" size="10"><br><br>
+            Start time: <input id="stime" class="input" type="number" min="00" max="23" value="" size="2"> . 
+            <input id="smin" class="input" type="number" min="00" max="59" value="" size="2"><br>
+            <button id="quizcom" class="btn btn-danger">Commit quiz details</button><br><br>
+            
+            <p>Add question:</p>
+            Your question:<input id="question" class="input" type="text" value="I forgot to write something" size="50" ><br><br>
+            Time in seconds: <input id="time" class="input" type="text" value="10" size="2" maxlength="3" ><br>
+            
+            <p>Answers:</p>
+            <input id="answer1" class="input" type="text" value="answer1" ><br>
+            <input id="answer2" class="input" type="text" value="answer2" ><br>
+            <input id="answer3" class="input" type="text" value="answer3" ><br>
+            <input id="answer4" class="input" type="text" value="answer4" ><br>
+            Which answer is correct?<input id="correct" class="input" type="number" value="1" min="1" max="4" size="1" ><br><br>
+            
+            <button id="qnext" class="btn btn-danger" disabled> Send in question</button>:Saves Question and loads new one<br><br> 
+            <button id="quizsend" class="btn btn-danger" disabled>Send in quiz</button>:Saves Quiz
+            <button id="back" class="btn btn-danger">Back to meny</button> <button id="music" class="btn btn-danger">Turn of music</button>
+            <audio id="musikk" autoplay="autoplay" loop="loop" ><source src="Creepy.mp3" /></audio>
+        </div>
+        <script src="jquery-3.2.1.min.js"></script>    
+        <script>
+            $(document).ready(function(){
+                var quizname;
+                var quizcommited;
+                     
+                var date = new Date();
+                                    
+                var min = date.getMinutes();
+                var hour = date.getHours();
+                if(min>=50){
+                    hour+=1;
+                    min-=50;
+                }else{
+                    min+=5;
+                }
+     
+                $("#smin").attr("value", min);
+                $("#stime").attr("value", hour);
+
+
+                /*
+                 * creates a quiz when quiz commit button is pressed
+                 */
+                $("#quizcom").click(function () {
+                    var hour= $("#stime").val();
+                    var min= $("#smin").val();
+                    if(min<10 && min.charAt(0)!=0) min="0" + min;
+                    $("#qnext").prop('disabled', false);
+                    $("#quizcom").prop('disabled', true);
+                    quizname=$("#quizname").val();
+                    quizcommited=1;
+                    $.ajax({
+                        url: 'rest/quiz',
+                        type: 'POST',
+                        data: JSON.stringify({
+                            name: $("#quizname").val(),
+                            starttime: parseInt(hour+min),
+                            maker: $("#username").val()
+                        }),
+                        contentType: 'application/json; charset=utf-8',
+                        dataType: 'json'                 
+                    });
+                });
+                
+                /*
+                 * creates a question when next question button is pressed
+                 */
+                $("#qnext").click(function () {
+                    var correct=$("#correct").val();
+                    var answers=[];
+                    answers[0]=$("#answer1").val();
+                    answers[1]=$("#answer2").val();
+                    answers[2]=$("#answer3").val();
+                    answers[3]=$("#answer4").val();
+                    $.ajax({
+                        url: 'rest/quiz/' + $("#quizname").val(),
+                        type: 'POST',
+                        data: JSON.stringify({
+                            text: $("#question").val(),
+                            time: parseInt($("#time").val()),
+                            answers: answers,
+                            correct: correct
+
+                        }),
+                        contentType: 'application/json; charset=utf-8',
+                        dataType: 'json',
+                    success: function(result) {
+                        $("#question").attr("value", "");
+                        $("#time").attr("value", "10");
+                        $("#answer1").attr("value", "");
+                        $("#answer2").attr("value", "");
+                        $("#answer3").attr("value", "");
+                        $("#answer4").attr("value", "");
+                        $("#correct").attr("value", "1");
+                        $("#quizsend").prop('disabled', false);    
+                    }
+                    });
+                });
+                
+                var quizsent;
+                $("#quizsend").click(function () {
+                    quizsent=1;
+                    window.location="index.html";
+                });
+                
+                $("#back").click(function () {
+                    window.location="index.html";
+                });
+                
+        
+                /*
+                 * deletes the quiz if send quiz button is not pressed before
+                 * leaving the page
+                 */
+                $(window).bind('beforeunload', function(){
+                    if(quizsent!=1 && quizcommited==1){
+                        $.ajax({
+                            url: 'rest/quiz/' + quizname,
+                            type: 'DELETE',
+                        success: function(result) {
+                            $('#myTable').DataTable().ajax.reload();
+                        }
+                        });
+                    }
+                });
+                    
+                $("#music").click(function () {
+                    $("#musikk").trigger("pause");
+                });
+            });
+        </script>
+    </body>
+</html>
